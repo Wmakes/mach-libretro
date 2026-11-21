@@ -1,0 +1,2 @@
+# Low-level libretro API. Core entry points belong to consumers.
+fwd libretro.c;

@@ -1,0 +1,39 @@
+name: Native ABI tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, windows-2022, macos-15-intel, macos-15]
+        profile: [debug, release]
+    runs-on: ${{ matrix.runner }}
+    env:
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Expose Windows LLVM tools
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '"C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append'
+      - name: Install checksum-verified Mach 6.10.1
+        run: python tools/ci-install-mach.py
+      - name: Realize pinned dependency tags
+        run: mach dep pull .
+      - name: Test native layouts, callbacks and library symbols
+        run: python tools/test.py --profile ${{ matrix.profile }}
+      - name: Check formatting
+        run: |
+          mach fmt . --check

@@ -1,0 +1,3 @@
+# Test-runner startup is intentionally separate from the library.
+use libretro.tests;
+use std.runtime;
