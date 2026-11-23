@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Install the checksum-verified Mach release into a CI temporary directory."""
 import hashlib
+import json
 import os
 from pathlib import Path
 import platform
@@ -10,10 +11,15 @@ import tempfile
 import urllib.request
 import zipfile
 
-VERSION = '6.10.1'
+with urllib.request.urlopen('https://api.github.com/repos/briar-systems/mach/releases/latest', timeout=60) as response:
+    release = json.load(response)
+tag = release['tag_name']
+VERSION = tag.removeprefix('v')
+if not VERSION:
+    raise SystemExit(f'Unexpected Mach release tag: {tag!r}')
 os_name = {'Linux': 'linux', 'Darwin': 'darwin', 'Windows': 'windows'}[platform.system()]
 arch = {'AMD64': 'x86_64', 'x86_64': 'x86_64', 'arm64': 'aarch64', 'aarch64': 'aarch64'}[platform.machine()]
-base = f'https://github.com/briar-systems/mach/releases/download/v{VERSION}'
+base = f'https://github.com/briar-systems/mach/releases/download/{tag}'
 name = f'mach-{VERSION}-{arch}-{os_name}'+('.zip' if os_name == 'windows' else '.tar.gz')
 destination = Path(os.environ.get('RUNNER_TEMP', tempfile.gettempdir()))/f'libretro-mach-{VERSION}'
 destination.mkdir(parents=True, exist_ok=True)

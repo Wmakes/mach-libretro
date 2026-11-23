@@ -92,7 +92,7 @@ def generate():
              'pub def size_t: u64;', 'pub def uintptr_t: u64;', '', '# Constants and C enumerations']
     for name, ty, value in rows:
         if name.startswith('@'):
-            lines.extend(['$if ($mach.build.os == $mach.os.windows) {', f'    pub def {name[1:]}: i32;', '}', '$or {', f'    pub def {name[1:]}: u32;', '}'])
+            lines.extend(['$if ($mach.build.sys == $mach.sys.windows) {', f'    pub def {name[1:]}: i32;', '}', '$or {', f'    pub def {name[1:]}: u32;', '}'])
         else:
             value = str(int(value))
             if value.startswith('-'):

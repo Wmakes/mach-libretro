@@ -1,35 +1,36 @@
 [project]
 id = "libretro"
 version = "1.0.0"
-mach = "^6.10.1"
-src = "src"
-out = "out/{target.name}/{profile.name}"
+mach = "^7"
+src  = "src"
+work = "out/{target.name}/{profile.name}"
 
 [target.linux-x86_64]
-isa = "x86_64"
-os  = "linux"
-abi = "sysv64"
+arch = "x86_64"
+sys  = "linux"
+abi  = "sysv64"
 
 [target.windows-x86_64]
-isa = "x86_64"
-os  = "windows"
-abi = "win64"
+arch = "x86_64"
+sys  = "windows"
+abi  = "win64"
 
 [target.darwin-x86_64]
-isa = "x86_64"
-os  = "darwin"
-abi = "sysv64"
+arch = "x86_64"
+sys  = "darwin"
+abi  = "sysv64"
 
 [target.darwin-aarch64]
-isa = "aarch64"
-os  = "darwin"
-abi = "aapcs64"
+arch = "aarch64"
+sys  = "darwin"
+abi  = "darwinpcs"
 
 [artifact.mach-libretro]
 kind = "static"
 default = true
+export = true
 entry = "lib.mach"
-out = "lib/mach-libretro{artifact.suffix}"
+out = "{project.work}/lib/mach-libretro{artifact.suffix}"
 targets = ["*"]
 link = []
 need = []
@@ -37,27 +38,23 @@ need = []
 [artifact.tests]
 kind = "static"
 entry = "test.mach"
-out = "lib/tests{artifact.suffix}"
+out = "{project.work}/lib/tests{artifact.suffix}"
 targets = ["*"]
 link = []
 need = []
 
 [profile.debug]
 default = true
-opt = 0
+optimize = false
 debug = true
 simd = "scalarize"
-vectorize = false
-float_reassoc = false
 
 [profile.release]
-opt = 2
+optimize = true
 debug = false
 simd = "scalarize"
-vectorize = true
-float_reassoc = false
 
 
 [dep.std]
 git = "https://github.com/briar-systems/mach-std"
-version = "^9.5.0"
+version = "^10"

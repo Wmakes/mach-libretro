@@ -658,147 +658,147 @@ pub val RETRO_POWERSTATE_CHARGING:                                             i
 pub val RETRO_POWERSTATE_CHARGED:                                              i32 = 3;
 pub val RETRO_POWERSTATE_PLUGGED_IN:                                           i32 = 4;
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_language: i32;
 }
 $or {
     pub def retro_language: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_key: i32;
 }
 $or {
     pub def retro_key: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_mod: i32;
 }
 $or {
     pub def retro_mod: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_vr_reference_space: i32;
 }
 $or {
     pub def retro_vr_reference_space: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_vr_eye: i32;
 }
 $or {
     pub def retro_vr_eye: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_video_decode_gpu_api: i32;
 }
 $or {
     pub def retro_video_decode_gpu_api: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_vr_hand: i32;
 }
 $or {
     pub def retro_vr_hand: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_vr_hand_joint: i32;
 }
 $or {
     pub def retro_vr_hand_joint: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_hw_render_interface_type: i32;
 }
 $or {
     pub def retro_hw_render_interface_type: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_av_enable_flags: i32;
 }
 $or {
     pub def retro_av_enable_flags: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_hw_render_context_negotiation_interface_type: i32;
 }
 $or {
     pub def retro_hw_render_context_negotiation_interface_type: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_log_level: i32;
 }
 $or {
     pub def retro_log_level: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_sensor_action: i32;
 }
 $or {
     pub def retro_sensor_action: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_camera_buffer: i32;
 }
 $or {
     pub def retro_camera_buffer: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_rumble_effect: i32;
 }
 $or {
     pub def retro_rumble_effect: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_hw_context_type: i32;
 }
 $or {
     pub def retro_hw_context_type: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_pixel_format: i32;
 }
 $or {
     pub def retro_pixel_format: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_savestate_context: i32;
 }
 $or {
     pub def retro_savestate_context: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_message_target: i32;
 }
 $or {
     pub def retro_message_target: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_message_type: i32;
 }
 $or {
     pub def retro_message_type: u32;
 }
 
-$if ($mach.build.os == $mach.os.windows) {
+$if ($mach.build.sys == $mach.sys.windows) {
     pub def retro_power_state: i32;
 }
 $or {

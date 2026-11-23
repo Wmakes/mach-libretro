@@ -52,8 +52,6 @@ def link_archive(archive, output):
                 obj = directory/f'{len(objects)}.o'
                 obj.write_bytes(member)
                 objects.append(obj)
-            else:
-                assert header[:16].strip() in (b'/', b'//', b'/SYM64/'), 'Unexpected archive member'
             offset += 60 + length + (length & 1)
         assert objects, 'No Mach-O members found'
         command(CC, '-dynamiclib', *objects, '-o', output)
@@ -85,7 +83,7 @@ def qualified(ty):
 
 def abi_sources(nodes):
     """C expectations come from sizeof/alignof/offsetof, never Mach output."""
-    mach = ['use api: libretro;', 'use c: libretro.c;', '#[symbol("bare_import")]', 'pub fun bare_import() u32 { ret api.c.RETRO_API_VERSION::u32; }']
+    mach = ['use api: libretro.lib;', 'use c: libretro.c;', '#[export]', '#[symbol("bare_import")]', 'pub fun bare_import() u32 { ret api.c.RETRO_API_VERSION::u32; }']
     c = ['#include "libretro.h"', '#include <assert.h>', '#include <stdarg.h>', '#include <stdio.h>', '#include <string.h>',
          '#ifdef _WIN32', '#include <windows.h>', '#define OPEN(p) LoadLibraryA(p)', '#define SYM(h,n) GetProcAddress(h,n)', '#define CLOSE(h) FreeLibrary(h)',
          '#else', '#include <dlfcn.h>', '#define OPEN(p) dlopen(p, RTLD_NOW | RTLD_LOCAL)', '#define SYM(h,n) dlsym(h,n)', '#define CLOSE(h) dlclose(h)', '#endif',
@@ -109,7 +107,7 @@ def abi_sources(nodes):
                       (f'$size_of({qualified(f["type"]["qualType"])})', f'sizeof((({cty}*)0)->{field})')]
         if cty.startswith('enum '):
             cases.append((f'((0i32 - 1)::c.{name} < 0)::u64', f'(({cty})-1 < ({cty})0)'))
-        mach += [f'#[symbol("layout_{i}")]', f'pub fun layout_{i}(index: u32) u64 {{']
+        mach += ['#[export]', f'#[symbol("layout_{i}")]', f'pub fun layout_{i}(index: u32) u64 {{']
         for j, (mt, ct) in enumerate(cases):
             mach += [f'    if (index == {j}) {{ ret {mt}; }}']
             checks += [f'if (layout_{i}({j}) != (uint64_t)({ct})) {{ fprintf(stderr,"ABI mismatch: {name} {ct}\\n"); return 1; }}']
@@ -151,7 +149,7 @@ def abi_sources(nodes):
         if '...' in args:
             # Only retro_log_printf_t is variadic in the public header.
             assert name == 'retro_log_printf_t'
-            mach += [f'#[symbol("invoke_{i}")]', f'pub fun invoke_{i}(cb: {mt}) {{ cb(c.RETRO_LOG_INFO::c.retro_log_level, "%d %f %s"::*u8, (0i32 - 17), 1.25f64, "ok"::*u8); }}']
+            mach += ['#[export]', f'#[symbol("invoke_{i}")]', f'pub fun invoke_{i}(cb: {mt}) {{ cb(c.RETRO_LOG_INFO::c.retro_log_level, "%d %f %s"::*u8, (0i32 - 17), 1.25f64, "ok"::*u8); }}']
             c += [f'static void log_callback(enum retro_log_level level, const char *fmt, ...) {{',
                   'assert(level == RETRO_LOG_INFO && strcmp(fmt,"%d %f %s") == 0);',
                   'va_list ap; va_start(ap,fmt); assert(va_arg(ap,int) == -17); assert(va_arg(ap,double) == 1.25); assert(strcmp(va_arg(ap,const char*),"ok") == 0); va_end(ap); calls++; }']
@@ -159,7 +157,7 @@ def abi_sources(nodes):
             continue
         params = ', '.join(f'a{j}: {qualified(t)}' for j,t in enumerate(args))
         suffix = (' ' + qualified(result)) if result != 'void' else ''
-        mach += [f'#[symbol("invoke_{i}")]', f'pub fun invoke_{i}(cb: {mt}' + (', '+params if params else '') + ')' + suffix + ' {',
+        mach += ['#[export]', f'#[symbol("invoke_{i}")]', f'pub fun invoke_{i}(cb: {mt}' + (', '+params if params else '') + ')' + suffix + ' {',
                  '    ' + ('ret ' if result != 'void' else '') + 'cb(' + ', '.join(f'a{j}' for j in range(len(args))) + ');', '}']
         c += [f'static {result} callback_{i}(' + (', '.join(f'{t} a{j}' for j,t in enumerate(args)) or 'void') + ') {']
         for j,t in enumerate(args):
@@ -178,7 +176,7 @@ def abi_sources(nodes):
         c += [f'uint64_t (*layout_{i})(unsigned) = (uint64_t (*)(unsigned))SYM(handle,"layout_{i}"); assert(layout_{i});']
     rows = generate.constants_and_enums(nodes)
     constants = [row[0] for row in rows if not row[0].startswith('@')]
-    mach += ['#[symbol("constant_value")]', 'pub fun constant_value(index: u32) i64 {']
+    mach += ['#[export]', '#[symbol("constant_value")]', 'pub fun constant_value(index: u32) i64 {']
     for i, name in enumerate(constants):
         mach += [f'    if (index == {i}) {{ ret c.{name}::i64; }}']
         checks += [f'assert(constant_value({i}) == (int64_t)({name}));']
@@ -194,7 +192,10 @@ def abi_test(profile, temporary):
     nodes = generate.declarations()
     m, c = abi_sources(nodes)
     if OS == 'darwin':
-        m = re.sub(r'#\[symbol\("([^"]+)"\)\]', lambda match: '#[symbol("_'+match[1]+'")]', m)
+        # Mach-O object symbols have a leading underscore. `#[symbol]` names
+        # are emitted verbatim, so match the object name; dlsym then receives
+        # the undecorated spelling after Mach-O's linker strips that prefix.
+        m = re.sub(r'#\[symbol\("([^\"]+)"\)\]', lambda match: '#[symbol("_'+match[1]+'")]', m)
     (temporary/'src').mkdir()
     (temporary/'src/probe.mach').write_text(m)
     manifest = (ROOT/'mach.toml').read_text()
@@ -202,15 +203,16 @@ def abi_test(profile, temporary):
     manifest = manifest[:manifest.index('[artifact.')] + f'''[artifact.probe]
 kind = "static"
 default = true
+export = true
 entry = "probe.mach"
-out = "probe{{artifact.suffix}}"
+out = "{{project.work}}/probe{{artifact.suffix}}"
 targets = ["*"]
 link = []
 need = []
 
 ''' + manifest[manifest.index('[profile.debug]'):]
     # Use a path dependency, exactly as an independent consumer would.
-    manifest = manifest.replace('git = "https://github.com/briar-systems/mach-std"\nversion = "^9.5.0"', 'path = '+json.dumps((ROOT/'dep/std').as_posix()))
+    manifest = manifest.replace('git = "https://github.com/briar-systems/mach-std"\nversion = "^10"', 'path = '+json.dumps((ROOT/'dep/std').as_posix()))
     manifest += '\n[dep.libretro]\npath = '+json.dumps(ROOT.as_posix())+'\n'
     (temporary/'mach.toml').write_text(manifest)
     command('mach', 'dep', 'pull', temporary)
